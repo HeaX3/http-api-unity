@@ -1,6 +1,6 @@
 {
     "name": "HttpApi",
-    "rootNamespace": "HttpApi",
+    "rootNamespace": "HttpApis",
     "references": [
         "Essentials",
         "RSG.Promise"

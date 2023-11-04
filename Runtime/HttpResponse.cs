@@ -5,7 +5,7 @@ using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 using UnityEngine.Networking;
 
-namespace HttpApi
+namespace HttpApis
 {
     public readonly struct HttpResponse
     {

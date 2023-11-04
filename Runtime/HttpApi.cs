@@ -7,7 +7,7 @@ using RSG;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace HttpApi
+namespace HttpApis
 {
     /// <summary>
     /// To create a new API client, inherit this class, create a DontDestroyOnLoad(gameObject) instance carrying a
