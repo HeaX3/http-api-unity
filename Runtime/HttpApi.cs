@@ -136,7 +136,7 @@ namespace HttpApis
 
         #region Helpers
 
-        private IPromise<UnityWebRequest> Perform(UnityWebRequest request)
+        protected IPromise<UnityWebRequest> Perform(UnityWebRequest request)
         {
             return new Promise<UnityWebRequest>((resolve, reject) =>
             {
@@ -216,7 +216,11 @@ namespace HttpApis
             }
         }
 
-        private string BuildUrl(string path)
+        /// <summary>
+        /// Turns the relative path into an absolute url by prepending <see cref="endpoint"/>
+        /// If the provided path already starts with http, returns it without modification.
+        /// </summary>
+        public string BuildUrl(string path)
         {
             if (path.StartsWith("http")) return path;
             var result = endpoint + path;
