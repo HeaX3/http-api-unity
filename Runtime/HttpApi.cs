@@ -18,7 +18,9 @@ namespace HttpApis
         public string endpoint { get; set; }
         public readonly Dictionary<string, string> defaultHeaders = new();
 
-        #region Utility Methods
+        private const int maxSendWebRequestTry = 3;
+
+        #region Public Utility Methods
 
         /// <summary>
         /// Shorthand to write the AuthenticationHeader header value in the <see cref="defaultHeaders"/> dictionary
@@ -34,6 +36,18 @@ namespace HttpApis
         public void SetAuthorization(string token)
         {
             defaultHeaders["Authorization"] = token;
+        }
+
+        #endregion
+
+        #region Standardized API Calls
+
+        public IPromise<Texture2D> GetImage(string url, int maxRedownloadAttempts = maxSendWebRequestTry)
+        {
+            return new Promise<Texture2D>((resolve, reject) =>
+            {
+                TryingResolveRequestToGettingTexture(url, 0, maxRedownloadAttempts, resolve, reject);
+            });
         }
 
         #endregion
@@ -160,6 +174,55 @@ namespace HttpApis
                     }
                 }));
             });
+        }
+
+        private void TryingResolveRequestToGettingTexture(string url, int currentSendWebRequestTry,
+            int maxRedownloadAttempts, Action<Texture2D> resolve, Action<Exception> reject)
+        {
+            var request = UnityWebRequestTexture.GetTexture(url);
+
+            if (!gameObject.activeInHierarchy)
+            {
+                reject(new Exception("Api is inactive."));
+                return;
+            }
+
+            StartCoroutineGetImage(url, currentSendWebRequestTry, maxRedownloadAttempts, request, resolve, reject);
+        }
+
+        private void StartCoroutineGetImage(string url, int currentSendWebRequestTry, int maxRedownloadAttempts,
+            UnityWebRequest request, Action<Texture2D> resolve, Action<Exception> reject)
+        {
+            StartCoroutine(PerformRoutine(request, () =>
+            {
+                if (request.result != UnityWebRequest.Result.Success)
+                {
+                    if (currentSendWebRequestTry < maxRedownloadAttempts)
+                    {
+                        Debug.Log(string.Format("Failed fetching image from {0} ({1}), try again {2}/{3}",
+                            url, request.result, (currentSendWebRequestTry + 1), maxRedownloadAttempts));
+
+                        request.Dispose();
+
+                        currentSendWebRequestTry++;
+                        TryingResolveRequestToGettingTexture(url, currentSendWebRequestTry, maxRedownloadAttempts,
+                            resolve, reject);
+                        return;
+                    }
+
+                    reject(new Exception("Failed fetching image from " + url + ": " + request.error));
+                    return;
+                }
+
+                var texture = DownloadHandlerTexture.GetContent(request);
+                if (texture.width == 8 && texture.height == 8)
+                {
+                    reject(new Exception("Failed fetching image from " + url));
+                    return;
+                }
+
+                resolve(texture);
+            }));
         }
 
         private static IEnumerator PerformRoutine(UnityWebRequest request, Action callback)
