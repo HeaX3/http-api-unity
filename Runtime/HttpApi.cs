@@ -251,6 +251,7 @@ namespace HttpApis
 
             foreach (var entry in defaultHeaders)
             {
+                if (string.IsNullOrWhiteSpace(entry.Key) || string.IsNullOrWhiteSpace(entry.Value)) continue;
                 request.SetRequestHeader(entry.Key, entry.Value);
             }
         }
